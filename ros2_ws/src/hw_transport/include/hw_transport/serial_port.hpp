@@ -24,7 +24,8 @@ public:
   SerialPort(const SerialPort &) = delete;
   SerialPort & operator=(const SerialPort &) = delete;
 
-  /// Opens `path` in raw mode at `baud` (standard Linux rates, 9600 to 4000000).
+  /// Opens `path` in raw mode at `baud` (standard Linux rates, 9600 to 4000000), with an
+  /// exclusive lock: it fails if another program (or pyserial with exclusive=True) has it.
   /// Throws std::runtime_error / std::invalid_argument on failure.
   void open(const std::string & path, int baud);
   void close();

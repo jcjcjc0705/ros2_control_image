@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <linux/serial.h>
 #include <poll.h>
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -57,6 +58,14 @@ void SerialPort::open(const std::string & path, int baud)
 
   const int fd = ::open(path.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
   if (fd < 0) {throw errno_error("can't open " + path);}
+
+  // Exclusive, like pyserial's exclusive=True (same flock): two programs on one port would
+  // each get half of the received frames, and both could command the same device.
+  if (::flock(fd, LOCK_EX | LOCK_NB) < 0) {
+    ::close(fd);
+    throw std::runtime_error(
+            path + " is in use by another program (check with: fuser -v " + path + ")");
+  }
 
   termios tio{};
   if (::tcgetattr(fd, &tio) < 0) {

@@ -249,15 +249,26 @@ bus_->send(frames);
 
 新增開發板（以序列埠形式的 USB-CAN 為例）：
 
-1. 繼承 `hw_transport::CanBus`，實作 `open`、`close`、`is_open`、`send`；於 `open` 中啟動接收執行緒，每收到一幀呼叫 `dispatch()`。序列埠部分可使用 `hw_transport::SerialPort`。
+1. 繼承 `hw_transport::CanBus`，實作 `open`、`close`、`is_open`、`send`；於 `open` 中啟動接收執行緒，每收到一幀呼叫 `dispatch()`。序列埠部分可使用 `hw_transport::SerialPort`，它以獨佔方式開啟（與 pyserial 的 `exclusive=True` 相同），另一個程式已開啟同一個 port 時會失敗。
 2. 以 `PLUGINLIB_EXPORT_CLASS(my_board::Usb2Can, hw_transport::CanBus)` 匯出，並於 CMake 中加入 `pluginlib_export_plugin_description_file(hw_transport plugins.xml)`。
 3. 以 `can_tool` 驗證，不需任何馬達程式：
 
 ```bash
 ros2 run hw_transport can_tool dump hw_transport/SocketCan can0
 ros2 run hw_transport can_tool send my_board/Usb2Can /dev/can_lf 001#FFFFFFFFFFFFFFFC
-ros2 run hw_transport can_tool send hw_transport/SocketCan can0 011#00 -n 6000 -r 6000   # 負載測試，輸出被拒絕的幀數
+ros2 run hw_transport can_tool send hw_transport/SocketCan can0 011#00 -n 6000 -r 6000 -q   # 負載測試
 ```
+
+`send` 會在同一個程式中輸出收到的幀，因此也適用於獨佔開啟的序列埠（此時無法另外執行 `dump`）。可同時給多個幀，依序送出。
+
+| 選項 | 預設值 | 說明 |
+|---|---|---|
+| `-n` | `1` | 重複次數 |
+| `-r` | `100` | 重複頻率（Hz） |
+| `-w` | `200` | 最後一次送出後，繼續接收的毫秒數 |
+| `-g` | `0` | 同一次重複中，各幀之間的間隔（微秒） |
+| `-q` | | 不輸出各幀，只輸出總數 |
+| `key=value` | | 傳給 transport 的參數 |
 
 SocketCAN 介面須先於 host 上啟用：`sudo ip link set can0 up type can bitrate 1000000`。
 

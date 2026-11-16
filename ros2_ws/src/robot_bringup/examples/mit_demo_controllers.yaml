@@ -1,0 +1,15 @@
+# Controllers for mit_demo.urdf.xacro. The /**/ prefix matches the node in any namespace.
+/**/controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    mit_controller:
+      type: mit_controller/MitController
+
+/**/mit_controller:
+  ros__parameters:
+    joints: [joint1, joint2]
+    command_timeout: 0.5  # s without a new MitCommand -> damping
+    damping_kd: 1.0       # N*m*s/rad, with kp = 0, while damping

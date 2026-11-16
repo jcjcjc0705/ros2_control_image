@@ -1,0 +1,5 @@
+<library path="mit_controller">
+  <class name="mit_controller/MitController" type="mit_controller::MitController" base_class_type="controller_interface::ControllerInterface">
+    <description>Forwards MitCommand (q*, dq*, kp, kd, tau_ff) to MIT motors; damping when commands stop.</description>
+  </class>
+</library>

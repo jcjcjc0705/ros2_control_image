@@ -1,0 +1,5 @@
+<library path="hw_transport_socketcan">
+  <class name="hw_transport/SocketCan" type="hw_transport::SocketCan" base_class_type="hw_transport::CanBus">
+    <description>Linux SocketCAN interface (can0, vcan0, ...).</description>
+  </class>
+</library>

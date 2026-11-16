@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!--
+  Two-joint MIT demo for robot_bringup, laid out the way every robot's xacro is:
+    - the hardware backend is chosen by the `hardware` argument, nothing else changes;
+    - every MIT joint has the five command interfaces mit_controller claims.
+  In a real robot, the kinematics (links/joints) come from the description folder and only
+  the <ros2_control> block lives in the bringup folder.
+-->
+<robot name="mit_demo" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="hardware" default="mock"/>
+  <xacro:property name="hardware" value="$(arg hardware)"/>
+
+  <link name="base_link"/>
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 0.05"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="20" velocity="10"/>
+  </joint>
+  <link name="link1">
+    <visual>
+      <origin xyz="0.1 0 0"/>
+      <geometry><box size="0.2 0.04 0.04"/></geometry>
+    </visual>
+  </link>
+  <joint name="joint2" type="revolute">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="0.2 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14" upper="3.14" effort="20" velocity="10"/>
+  </joint>
+  <link name="link2">
+    <visual>
+      <origin xyz="0.1 0 0"/>
+      <geometry><box size="0.2 0.03 0.03"/></geometry>
+    </visual>
+  </link>
+
+  <!-- A motor folder ships a macro like this one, so the bringup only writes one line per joint. -->
+  <xacro:macro name="mit_joint" params="name">
+    <joint name="${name}">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="kp"/>
+      <command_interface name="kd"/>
+      <command_interface name="effort"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </xacro:macro>
+
+  <ros2_control name="mit_demo" type="system">
+    <hardware>
+      <xacro:if value="${hardware == 'mock'}">
+        <plugin>mock_components/GenericSystem</plugin>
+      </xacro:if>
+      <xacro:if value="${hardware == 'real'}">
+        <!-- The motor folder's plugin, and the board (transport) it is wired to. -->
+        <plugin>damiao_hardware/DamiaoSystem</plugin>
+        <param name="transport">hw_transport/SocketCan</param>
+        <param name="port">can0</param>
+      </xacro:if>
+    </hardware>
+    <xacro:mit_joint name="joint1"/>
+    <xacro:mit_joint name="joint2"/>
+  </ros2_control>
+</robot>

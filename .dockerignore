@@ -1,6 +1,5 @@
 .git/
 .github/
-docs/
 scripts/
 .dockerignore
 .gitignore
